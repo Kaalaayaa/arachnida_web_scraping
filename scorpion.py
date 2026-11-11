@@ -1,9 +1,9 @@
 import argparse
 import sys
 import signal
+from datetime import datetime
 from PIL import Image
 from PIL.ExifTags import TAGS
-
 
 def handle_exit(sig, frame):
     print("\nStopped.")
@@ -15,25 +15,42 @@ parser.add_argument("file", nargs='+', help="one or more file images to get info
 args = parser.parse_args()
 
 files = args.file
-print(files)
 
-# def extract_exif(img):
-#     try:
-#         with Image.open(img) as img:
-#             exif_data = img.getexif()
+for imagename in files:
+    try:
+        with Image.open(imagename) as image:
+            info_basic = {
+                "Filename": image.filename,
+                "Image Size": image.size,
+                "Image Height": image.height,
+                "Image Width": image.width,
+                "Image Format": image.format,
+                "Image Mode": image.mode,
+                "Image is Animated": getattr(image, "is_animated", False),
+                "Frames in Image": getattr(image, "n_frames", 1),
+            }
+            #Print basics metadata
+            for label, value in info_basic.items():
+                print(f"{label:25}: {value}")
 
-#             if exif_data:
-#                 print(exif_data)
-#             else:
-#                 print("no data")
-#     except Exception as e:
-#         print(f"Error:{e}")
+            #read efix data 
+            exifdata = image.getexif()
+            if not exifdata:
+                print("EXIF metadata: none")
+                continue
+            
+            date_taken = exifdata.get(36867) or exifdata.get(36868) or exifdata.get(306) #efix tags IDS orginal, digitized or general date
+            if date_taken:
+                print(f"{'Date taken':25}: {date_taken}")
+            else:
+                print(f"{'Date taken':25}: not available")
 
-# def parse_img(files):
-#     for file in files:
-#         print("exctracting files", file)
-#         extract_exif(file)
-
-# parse_img(files)
-
-imagename = 
+            for tag_id in exifdata:
+                tag = TAGS.get(tag_id, tag_id)
+                data = exifdata.get(tag_id)
+                #decode byte values to string
+                if isinstance(data, bytes):
+                    data = data.decode(errors="replace")
+                print(f"{tag:25}: {data}")
+    except (OSError, ValueError) as error:
+        print(f"Error reading {imagename}: {error}")

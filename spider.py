@@ -5,7 +5,7 @@ import sys
 import os
 from urllib.parse import urlparse, urljoin
 import signal
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp",}
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp"}
 
 def handle_exit(sig, frame):
     print("\nStopped.")
